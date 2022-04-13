@@ -1,0 +1,9 @@
+
+Starting Stage 3 Reduction
+
+Input directory: /home/matthew/data/hd219666b/hst_images
+Output directory: /home/matthew/inquiry/hd219666b/reduction/eureka_run/Stage3/S3_2022-04-08_wfc3_hd219666b_ap8_bg40_run1/
+Using ap=8, bg=40
+Copying S3 control file
+
+Found 72 data file(s) ending in ima.fits
