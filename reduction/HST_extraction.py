@@ -344,6 +344,10 @@ def Extract1D(subexps, traces, extractionheight=15):
         
         for j, dpixel in enumerate(disppixels):
             box_bottom = int(np.rint(box_bottoms[j]))
+            if box_bottom < 0:
+                # sometimes the rounding makes the index -1
+                # in which case the sum will not work properly
+                box_bottom = 0
             box_top = int(np.rint(box_tops[j]))
             
             box = spec2D[box_bottom:box_top, j]
