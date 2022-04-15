@@ -1,3 +1,6 @@
+import sys
+#sys.path.append('~/./anaconda/lib/python3.8/site-packages')
+print(sys.path)
 import numpy, math, sys, scipy, progressbar
 import matplotlib.pyplot as plt
 import astropy.time as time
@@ -180,10 +183,10 @@ def BkgdSub(subexps, badpix_masks, scandir):
 		bkgd_mask[yloc-50:yloc+40,xloc-90:xloc+90] = True  # Add star's position + buffer to the non-background mask
 
 		## locate and mask nearby stars
-		#otherstarid = numpy.ma.array(subexp, mask=bkgd_mask)
-		#vertslice = numpy.sum(otherstarid[:,230:], axis=1)
-		#yloc = int(numpy.rint(numpy.argmax(vertslice)))
-		#bkgd_mask[yloc-5:yloc+5,175:] = True
+		otherstarid = numpy.ma.array(subexp, mask=bkgd_mask)
+		vertslice = numpy.sum(otherstarid[:,230:], axis=1)
+		yloc = int(numpy.rint(numpy.argmax(vertslice)))
+		bkgd_mask[yloc-5:yloc+5,175:] = True
 
 		## for downward scans, also look at the left side for masking
 		if scandir == 0:
@@ -239,7 +242,7 @@ def FlatField(flatimagepath, subexps, wavesol, subexp_shifts):
 	return flatted
 
 import numpy as np
-def cutout2Dspectrum(subexps, extractrange, height, sidebuffer, returnCoords=False):
+def cutout2Dspectrum(subexps, extractrange, height, sidebuffer, returnCoords=False, manualOverride=None):
     ## Function that takes full spectrum images and extracts only the part around the 2D target spectrum
     
     Nsubexp = subexps.shape[0]  # The number of sub-exposures
@@ -258,7 +261,11 @@ def cutout2Dspectrum(subexps, extractrange, height, sidebuffer, returnCoords=Fal
         subexp_fullimg = subexps[i]  # Get this sub-exposure's image
         
         # Determining the 'middle' of the spectrum along the scan (y) axis by weighted average along y at middle position in (x)
+        
         middle_spixel_float = np.average(np.arange(subexp_fullimg.shape[0]), weights=subexp_fullimg[:, middle_dpixel])
+        if manualOverride == 'o2i13':
+            print('override engaged')
+            middle_spixel_float = np.average(np.arange(subexp_fullimg.shape[0])[100:], weights=subexp_fullimg[100:, middle_dpixel])
         middle_spixel = int(np.rint(middle_spixel_float))
    
         # Defining the cut-out box
@@ -293,8 +300,8 @@ def CorrectBadPixels(subexps, DQimage, Niter=5, DQflags=[1,2,4,8,16,32,64,128,25
                         else:
                             try:
                                 # Set pixel to the median of pixels above and below it
-                                correctedspec[scanrow, badpixel] = np.median((correctedspec[scanrow+1, badpixel], 
-                                                                        correctedspec[scanrow-1, badpixel]))
+                                correctedspec[scanrow, badpixel] = np.median((correctedspec[scanrow, badpixel-1], 
+                                                                        correctedspec[scanrow, badpixel+1]))
                             except IndexError:
                                 # it'll throw an index error if on the edge of the cut-out image
                                 # in which case, it's a pixel we don't care about
@@ -317,7 +324,7 @@ def FitSpectralTrace(subexps):
         ##    via flux-weighted mean of that column
         center_spix_locs = np.zeros(len(disppixels))
         for dpixel in disppixels:
-            center_spix_locs[dpixel] = np.average(scanpixels, weights=spec2D[:,dpixel])
+            center_spix_locs[dpixel] = np.average(scanpixels, weights=abs(spec2D[:,dpixel]))
         ## Fitting these flux-weighted centres with a polynomial
         p2, p1, p0 = np.polyfit(disppixels, center_spix_locs, deg=2)
         trace = p2*(disppixels**2) + p1*disppixels + p0
