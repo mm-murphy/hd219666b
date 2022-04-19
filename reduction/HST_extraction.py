@@ -70,9 +70,16 @@ def CreateSubExps(file, WaveSol):
 
     # sub exposure shifts #
     side_angle = hdu[0].header['ANG_SIDE']
+    scan_rate = hdu[0].header['SCAN_RAT']   # [arcsec/s]
+    #scan_length_asec = hdu[0].header['SCAN_LEN'] # length of scan in [arcsec]
+    #print(16*scan_rate, scan_length_asec)
+    platescale = 0.13 # [arcsec/pixel] for WFC3
+    scan_length_pix = (16 * scan_rate) / platescale         
+    
     x = numpy.arange(nsubexp)
     b = 0.0
-    m = 5.85532565271 * numpy.cos(side_angle * math.pi / 180.)
+    #m = 5.85532565271 * numpy.cos(side_angle * math.pi / 180.)
+    m = scan_length_pix * numpy.cos(side_angle * math.pi / 180.)
     subexp_shifts = m * x + b
 
     # subtracting subsequent reads from other
