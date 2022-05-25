@@ -1,6 +1,6 @@
 import sys
 #sys.path.append('~/./anaconda/lib/python3.8/site-packages')
-print(sys.path)
+#print(sys.path)
 import numpy, math, sys, scipy, progressbar
 import matplotlib.pyplot as plt
 import astropy.time as time
@@ -291,6 +291,7 @@ def cutout2Dspectrum(subexps, extractrange, height, sidebuffer, returnCoords=Fal
  
 def CorrectBadPixels(subexps, DQimage, Niter=5, DQflags=[1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384]):
     corrected_subexps = np.copy(subexps)
+    Nbad = np.zeros(subexps.shape[0])
     for i in range(subexps.shape[0]):
         correctedspec = np.copy(subexps[i])
         Nrows = correctedspec.shape[0]
@@ -298,6 +299,7 @@ def CorrectBadPixels(subexps, DQimage, Niter=5, DQflags=[1,2,4,8,16,32,64,128,25
         for iteration in range(Niter):
             for scanrow in range(Nrows):
                 bad_idxs = np.where(DQsubexp[scanrow, :] != 0)[0]
+                Nbad[i] = len(bad_idxs)
                 for badpixel in bad_idxs:
                     if int(DQsubexp[scanrow, badpixel]) not in DQflags:
                         if int(DQsubexp[scanrow, badpixel]) == 48:
@@ -317,7 +319,8 @@ def CorrectBadPixels(subexps, DQimage, Niter=5, DQflags=[1,2,4,8,16,32,64,128,25
                         # If we get a standard flag, ignore it ...
                         pass
             corrected_subexps[i] = correctedspec
-    return corrected_subexps
+    Nbad_average = np.mean(Nbad)
+    return corrected_subexps, Nbad_average
         
 def FitSpectralTrace(subexps):
     
